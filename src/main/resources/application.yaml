@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/streamtunes
+    username: postgres
+    password: ${postgress.password}
+    jpa:
+      hibernate:
+        ddl-auto: validate
+      properties:
+        hibernate:
+          format_sql: true
+      show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  minio:
+    url: http://localhost:9000
+    access-key: ${minio.access-key}
+    secret-key: ${minio.secret-key}
+    bucket: songs
+
+server:
+  port: 8080
