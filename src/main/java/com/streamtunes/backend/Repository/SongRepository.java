@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface SongRepository extends JpaRepository<Song, UUID> {
@@ -18,4 +20,8 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
         OR LOWER(s.album) LIKE LOWER(CONCAT('%', :q, '%'))
     """)
     Page<Song> search(@Param("q") String query, Pageable pageable);
+
+    Optional<Song> findByTitleAndArtistAndAlbum(String title, String artist, String album);
+
+    Page<Song> findByTitleIn(List<String> titles, Pageable pageable);
 }

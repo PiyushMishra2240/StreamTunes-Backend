@@ -32,8 +32,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/songs/**").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/songs/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/songs").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/songs/search").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/songs/*/stream").permitAll()
+                        .requestMatchers("/api/songs/user").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/songs").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Principal;
 import java.util.UUID;
 
 @RestController
@@ -35,15 +36,22 @@ public class SongController {
             @RequestParam MultipartFile file,
             @RequestParam String title,
             @RequestParam String artist,
-            @RequestParam(required = false) String album
+            @RequestParam(required = false) String album,
+            Principal principal
     ) throws IOException {
-
-        return ResponseEntity.ok(service.upload(file, title, artist, album));
+        String username = principal.getName();
+        return ResponseEntity.ok(service.upload(file, title, artist, album, username));
     }
 
     @GetMapping
     public ResponseEntity<?> list(Pageable pageable) {
         return service.getSongs(pageable);
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<?> userSongs(Principal principal, Pageable pageable) {
+        String username = principal.getName();
+        return service.getUserSongs(username, pageable);
     }
 
     @GetMapping("/search")
@@ -92,4 +100,3 @@ public class SongController {
                 .body(new InputStreamResource(inputStream));
     }
 }
-

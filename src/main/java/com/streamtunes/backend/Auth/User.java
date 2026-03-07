@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -33,11 +36,20 @@ public class User {
     @Column(name = "auth_provider", nullable = false, length = 20)
     private AuthProvider authProvider;
 
+    @ElementCollection
+    @CollectionTable(
+            name = "user_songs",
+            joinColumns = @JoinColumn(name = "username", referencedColumnName = "username")
+    )
+    @Column(name = "song_title")
+    private List<String> userSongs;
+
     public User(String username, @Nullable String encode, String displayName, AuthProvider authProvider) {
         this.username = username;
         this.password = encode;
         this.displayName = displayName;
         this.authProvider = (authProvider != null) ? authProvider : AuthProvider.LOCAL;
+        this.userSongs = new ArrayList<>();
     }
 
     public enum AuthProvider {
