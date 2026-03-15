@@ -24,4 +24,6 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
     Optional<Song> findByTitleAndArtistAndAlbum(String title, String artist, String album);
 
     Page<Song> findByTitleIn(List<String> titles, Pageable pageable);
+
+    Page<Song> findByIsGlobalTrue(Pageable pageable);
 }

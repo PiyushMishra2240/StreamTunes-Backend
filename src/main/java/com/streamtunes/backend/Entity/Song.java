@@ -40,4 +40,11 @@ public class Song {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_global", nullable = false)
+    @Builder.Default
+    private Boolean isGlobal = false;
+
+    @Column(name = "uploaded_by")
+    private String uploadedBy;
 }

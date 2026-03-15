@@ -58,6 +58,8 @@ public class SongService {
                     .contentType(file.getContentType())
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
+                    .uploadedBy(username)
+                    .isGlobal(false)
                     .build();
 
             song = repository.save(song);
@@ -80,7 +82,7 @@ public class SongService {
     }
 
     public ResponseEntity<?> getSongs(Pageable pageable) {
-        Page<Song> page = repository.findAll(pageable);
+        Page<Song> page = repository.findByIsGlobalTrue(pageable);
 
         Map<String, Object> response = new HashMap<>();
         response.put("songs", page.getContent());
@@ -123,5 +125,20 @@ public class SongService {
     public Song get(UUID id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Song not found"));
+    }
+
+    public Song toggleGlobal(UUID id, String username) {
+        Song song = get(id);
+        
+        // If the song doesn't have an owner recorded yet, we can retroactively assign it to the user who toggle it
+        // since we only show songs in "Your Songs" if the title exists in their user.getUserSongs() list anyway.
+        if (song.getUploadedBy() == null) {
+            song.setUploadedBy(username);
+        } else if (!song.getUploadedBy().equals(username)) {
+            throw new RuntimeException("Only the owner can toggle the global status of this song");
+        }
+        
+        song.setIsGlobal(song.getIsGlobal() == null ? true : !song.getIsGlobal());
+        return repository.save(song);
     }
 }

@@ -59,6 +59,12 @@ public class SongController {
         return service.search(q, pageable);
     }
 
+    @PatchMapping("/{id}/toggle-global")
+    public ResponseEntity<Song> toggleGlobal(@PathVariable UUID id, Principal principal) {
+        String username = principal.getName();
+        return ResponseEntity.ok(service.toggleGlobal(id, username));
+    }
+
     @GetMapping("/{id}/stream")
     public ResponseEntity<InputStreamResource> stream(
             @PathVariable UUID id,
