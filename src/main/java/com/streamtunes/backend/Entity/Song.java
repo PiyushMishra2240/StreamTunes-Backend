@@ -47,4 +47,12 @@ public class Song {
 
     @Column(name = "uploaded_by")
     private String uploadedBy;
+
+    @Column(name = "like_count", nullable = false)
+    @Builder.Default
+    private Integer likeCount = 0;
+
+    @jakarta.persistence.Transient
+    @Builder.Default
+    private Boolean isLikedByCurrentUser = false;
 }

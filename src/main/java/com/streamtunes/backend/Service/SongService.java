@@ -21,11 +21,14 @@ public class SongService {
     private final SongRepository repository;
     private final StorageService storageService;
     private final UserRepository userRepository;
+    private final com.streamtunes.backend.Repository.SongLikeRepository songLikeRepository;
 
-    public SongService(SongRepository repository, StorageService storageService, UserRepository userRepository) {
+    public SongService(SongRepository repository, StorageService storageService, UserRepository userRepository,
+                       com.streamtunes.backend.Repository.SongLikeRepository songLikeRepository) {
         this.repository = repository;
         this.storageService = storageService;
         this.userRepository = userRepository;
+        this.songLikeRepository = songLikeRepository;
     }
 
     public Song upload(MultipartFile file, String title, String artist, String album, String username) throws IOException {
@@ -83,6 +86,21 @@ public class SongService {
 
     public ResponseEntity<?> getSongs(Pageable pageable) {
         Page<Song> page = repository.findByIsGlobalTrue(pageable);
+        
+        // Populate isLikedByCurrentUser for the currently logged-in user if available
+        String username = getCurrentUsername();
+        if (username != null && !page.getContent().isEmpty()) {
+            List<com.streamtunes.backend.Entity.SongLike> userLikes = songLikeRepository.findAllByUsername(username);
+            Set<UUID> likedSongIds = new HashSet<>();
+            for (com.streamtunes.backend.Entity.SongLike like : userLikes) {
+                likedSongIds.add(like.getSongId());
+            }
+            for (Song song : page.getContent()) {
+                if (likedSongIds.contains(song.getId())) {
+                    song.setIsLikedByCurrentUser(true);
+                }
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("songs", page.getContent());
@@ -108,6 +126,19 @@ public class SongService {
         }
 
         Page<Song> page = repository.findByTitleIn(userSongTitles, pageable);
+        
+        if (!page.getContent().isEmpty()) {
+            List<com.streamtunes.backend.Entity.SongLike> userLikes = songLikeRepository.findAllByUsername(username);
+            Set<UUID> likedSongIds = new HashSet<>();
+            for (com.streamtunes.backend.Entity.SongLike like : userLikes) {
+                likedSongIds.add(like.getSongId());
+            }
+            for (Song song : page.getContent()) {
+                if (likedSongIds.contains(song.getId())) {
+                    song.setIsLikedByCurrentUser(true);
+                }
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("songs", page.getContent());
@@ -140,5 +171,31 @@ public class SongService {
         
         song.setIsGlobal(song.getIsGlobal() == null ? true : !song.getIsGlobal());
         return repository.save(song);
+    }
+    
+    @org.springframework.transaction.annotation.Transactional
+    public void toggleLike(UUID songId, String username) {
+        boolean alreadyLiked = songLikeRepository.existsBySongIdAndUsername(songId, username);
+        
+        if (alreadyLiked) {
+            songLikeRepository.deleteBySongIdAndUsername(songId, username);
+            repository.decrementLikeCount(songId);
+        } else {
+            com.streamtunes.backend.Entity.SongLike like = com.streamtunes.backend.Entity.SongLike.builder()
+                    .songId(songId)
+                    .username(username)
+                    .likedAt(LocalDateTime.now())
+                    .build();
+            songLikeRepository.save(like);
+            repository.incrementLikeCount(songId);
+        }
+    }
+    
+    private String getCurrentUsername() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
+            return auth.getName();
+        }
+        return null;
     }
 }

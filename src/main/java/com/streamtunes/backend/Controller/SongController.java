@@ -65,6 +65,13 @@ public class SongController {
         return ResponseEntity.ok(service.toggleGlobal(id, username));
     }
 
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> toggleLike(@PathVariable UUID id, Principal principal) {
+        String username = principal.getName();
+        service.toggleLike(id, username);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{id}/stream")
     public ResponseEntity<InputStreamResource> stream(
             @PathVariable UUID id,

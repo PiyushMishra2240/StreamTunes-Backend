@@ -26,4 +26,12 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
     Page<Song> findByTitleIn(List<String> titles, Pageable pageable);
 
     Page<Song> findByIsGlobalTrue(Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE Song s SET s.likeCount = s.likeCount + 1 WHERE s.id = :songId")
+    void incrementLikeCount(@Param("songId") UUID songId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE Song s SET s.likeCount = s.likeCount - 1 WHERE s.id = :songId AND s.likeCount > 0")
+    void decrementLikeCount(@Param("songId") UUID songId);
 }
