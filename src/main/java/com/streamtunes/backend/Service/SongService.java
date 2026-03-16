@@ -6,6 +6,7 @@ import com.streamtunes.backend.Entity.Song;
 import com.streamtunes.backend.Repository.SongLikeRepository;
 import com.streamtunes.backend.Repository.SongRepository;
 import com.streamtunes.backend.Repository.StorageService;
+import org.apache.tika.Tika;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,13 @@ public class SongService {
     }
 
     public Song upload(MultipartFile file, String title, String artist, String album, String username) throws IOException {
+        // Validate File Type via Magic Bytes using Tika
+        Tika tika = new Tika();
+        String detectedType = tika.detect(file.getInputStream());
+        if (!detectedType.startsWith("audio/")) {
+            throw new IllegalArgumentException("Invalid file type uploaded. Only audio formatting is allowed.");
+        }
+
         // Check if an identical song already exists (same title + artist + album)
         Optional<Song> existingSong = repository.findByTitleAndArtistAndAlbum(title, artist, album);
 

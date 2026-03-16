@@ -92,9 +92,9 @@ public class SongController {
         Song song = service.get(id);
 
         long fileSize = storageService.getObjectSize(song.getFileKey());
-        InputStream inputStream = storageService.download(song.getFileKey());
 
         if (rangeHeader == null) {
+            InputStream inputStream = storageService.download(song.getFileKey());
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(song.getContentType()))
                     .contentLength(fileSize)
@@ -110,7 +110,7 @@ public class SongController {
 
         long contentLength = end - start + 1;
 
-        inputStream.skip(start);
+        InputStream inputStream = storageService.downloadRange(song.getFileKey(), start, contentLength);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Accept-Ranges", "bytes");
@@ -121,6 +121,7 @@ public class SongController {
                 .headers(headers)
                 .contentLength(contentLength)
                 .contentType(MediaType.parseMediaType(song.getContentType()))
+                .header("X-Content-Type-Options", "nosniff")
                 .body(new InputStreamResource(inputStream));
     }
 }

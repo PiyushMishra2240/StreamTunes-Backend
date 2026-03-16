@@ -52,6 +52,22 @@ public class MinioStorageService implements StorageService {
     }
 
     @Override
+    public InputStream downloadRange(String key, long offset, long length) {
+        try {
+            return minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(config.getBucket())
+                            .object(key)
+                            .offset(offset)
+                            .length(length)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download file range", e);
+        }
+    }
+
+    @Override
     public long getObjectSize(String key) {
         try {
             return minioClient.statObject(
