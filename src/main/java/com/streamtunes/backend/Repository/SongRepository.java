@@ -4,6 +4,7 @@ import com.streamtunes.backend.Entity.Song;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -27,11 +28,13 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
 
     Page<Song> findByIsGlobalTrue(Pageable pageable);
 
-    @org.springframework.data.jpa.repository.Modifying
+    @Modifying
     @Query("UPDATE Song s SET s.likeCount = s.likeCount + 1 WHERE s.id = :songId")
     void incrementLikeCount(@Param("songId") UUID songId);
 
-    @org.springframework.data.jpa.repository.Modifying
+    @Modifying
     @Query("UPDATE Song s SET s.likeCount = s.likeCount - 1 WHERE s.id = :songId AND s.likeCount > 0")
     void decrementLikeCount(@Param("songId") UUID songId);
+
+    Page<Song> findByUploadedByAndIsGlobalTrue(String uploadedBy, Pageable pageable);
 }

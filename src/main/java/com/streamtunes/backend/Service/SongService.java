@@ -3,6 +3,7 @@ package com.streamtunes.backend.Service;
 import com.streamtunes.backend.Auth.User;
 import com.streamtunes.backend.Auth.repository.UserRepository;
 import com.streamtunes.backend.Entity.Song;
+import com.streamtunes.backend.Repository.SongLikeRepository;
 import com.streamtunes.backend.Repository.SongRepository;
 import com.streamtunes.backend.Repository.StorageService;
 import org.springframework.data.domain.Page;
@@ -15,16 +16,19 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 @Service
 public class SongService {
 
     private final SongRepository repository;
     private final StorageService storageService;
     private final UserRepository userRepository;
-    private final com.streamtunes.backend.Repository.SongLikeRepository songLikeRepository;
+    private final SongLikeRepository songLikeRepository;
 
     public SongService(SongRepository repository, StorageService storageService, UserRepository userRepository,
-                       com.streamtunes.backend.Repository.SongLikeRepository songLikeRepository) {
+                       SongLikeRepository songLikeRepository) {
         this.repository = repository;
         this.storageService = storageService;
         this.userRepository = userRepository;
@@ -145,6 +149,40 @@ public class SongService {
         response.put("currentPage", page.getNumber());
         response.put("totalPages", page.getTotalPages());
         response.put("totalItems", page.getTotalElements());
+
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<?> getAnalytics(String username, String sortBy, int page, int size) {
+        Sort sort;
+        if ("date".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        } else {
+            // Default to sorting by likes
+            sort = Sort.by(Sort.Direction.DESC, "likeCount");
+        }
+        
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Song> analyticsPage = repository.findByUploadedByAndIsGlobalTrue(username, pageable);
+        
+        if (!analyticsPage.getContent().isEmpty()) {
+            List<com.streamtunes.backend.Entity.SongLike> userLikes = songLikeRepository.findAllByUsername(username);
+            Set<UUID> likedSongIds = new HashSet<>();
+            for (com.streamtunes.backend.Entity.SongLike like : userLikes) {
+                likedSongIds.add(like.getSongId());
+            }
+            for (Song song : analyticsPage.getContent()) {
+                if (likedSongIds.contains(song.getId())) {
+                    song.setIsLikedByCurrentUser(true);
+                }
+            }
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("songs", analyticsPage.getContent());
+        response.put("currentPage", analyticsPage.getNumber());
+        response.put("totalPages", analyticsPage.getTotalPages());
+        response.put("totalItems", analyticsPage.getTotalElements());
 
         return ResponseEntity.ok(response);
     }

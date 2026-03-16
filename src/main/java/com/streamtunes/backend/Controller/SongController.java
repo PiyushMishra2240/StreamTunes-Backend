@@ -72,6 +72,17 @@ public class SongController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/analytics")
+    public ResponseEntity<?> analytics(
+            Principal principal,
+            @RequestParam(defaultValue = "likes") String sortBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        String username = principal.getName();
+        return service.getAnalytics(username, sortBy, page, size);
+    }
+
     @GetMapping("/{id}/stream")
     public ResponseEntity<InputStreamResource> stream(
             @PathVariable UUID id,
