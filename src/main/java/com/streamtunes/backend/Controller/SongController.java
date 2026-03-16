@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -41,6 +42,11 @@ public class SongController {
     ) throws IOException {
         String username = principal.getName();
         return ResponseEntity.ok(service.upload(file, title, artist, album, username));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
     }
 
     @GetMapping

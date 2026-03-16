@@ -65,7 +65,7 @@ public class AuthController {
                 .secure(false) // should be true in production with https
                 .path("/")
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
@@ -77,7 +77,7 @@ public class AuthController {
                 .secure(false) // should be true in production with https
                 .path("/")
                 .maxAge(86400)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
